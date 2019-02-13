@@ -129,3 +129,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+# DRF框架设置
+REST_FRAMEWORK = {
+    # 异常处理,指定ＤＲＦ框架的异常处理函数
+    'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
+}
