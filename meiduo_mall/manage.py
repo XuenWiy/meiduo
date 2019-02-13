@@ -3,6 +3,9 @@ import os
 import sys
 
 if __name__ == "__main__":
+    # import sys
+    # print(sys.path)
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "meiduo_mall.settings.dev")
     try:
         from django.core.management import execute_from_command_line
