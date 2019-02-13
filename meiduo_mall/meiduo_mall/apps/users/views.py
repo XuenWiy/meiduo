@@ -1,11 +1,40 @@
 from django.shortcuts import render
 
 # Create your views here.
-
-
+from rest_framework import status
+from rest_framework.generics import GenericAPIView
+from users.serializers import UserSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.models import User
+
+
+# 用户注册信息保存
+# POST /users/
+class UserView(GenericAPIView):
+    # 指定视图所使用的序列化器类
+    serializer_class = UserSerializer
+
+    def post(self,request):
+        """
+        注册用户信息的保存
+        １．获取参数并进行校验(参数完整性,是否同意协议,手机号格式,手机号是该存在,两次密码是否一致,短信验证码是否正确)
+        ２．创建新用户并保存到数据库
+        ３．注册成功，将新用户序列化并返回
+        """
+        # １．获取参数并进行校验(参数完整性, 是否同意协议, 手机号格式, 手机号是该存在, 两次密码是否一致, 短信验证码是否正确)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+
+        # ２．创建新用户并保存到数据库
+        serializer.save()
+
+
+        # ３．注册成功，将新用户序列化并返回
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 
 # 查询手机号是否已经注册
 # GET /mobiles/(?P<mobile>1[3-9]\d{9})/count/
@@ -25,6 +54,7 @@ class MobileCountView(APIView):
             'count':count
         }
         return Response(res_data)
+
 
 
 # 查询用户名是否存在
