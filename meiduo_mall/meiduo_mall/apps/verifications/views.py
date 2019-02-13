@@ -34,6 +34,7 @@ class SMSCodeView(APIView):
 
         # １．随机生成６位数字作为短信验证码
         sms_code = '%6d' % random.randint(0,999999)
+        print(sms_code)
 
 
         #  2．在redis中存储短信验证码内容，以'sms_<mobile>'为key,以验证码内容为ｖａｌｕｅ
