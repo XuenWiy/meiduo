@@ -37,15 +37,21 @@ class SMSCodeView(APIView):
 
 
         #  2．在redis中存储短信验证码内容，以'sms_<mobile>'为key,以验证码内容为ｖａｌｕｅ
-
-
-
         # 把短信验证码存储到ｒｅｄｉｓ中的方法
         # redis_conn.set('<key>', '<value>', '<expires>')
         # redis_conn.setex('<key>', '<expires>', '<value>')
-        redis_conn.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
+
+        # redis管道使用，多个ｒｅｄｉｓ命令一次提交
+        # 创建redis管道对象
+        pl = redis_conn.pipeline()
+
+        # 向redis管道中添加命令
+        pl.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
         # 设置同一手机号最短发送短信标记
-        redis_conn.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, mobile)
+        pl.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, mobile)
+
+        # 一次性执行管道中的所有命令
+        pl.execute()
 
         #  3．使用云通讯给ｍｏｂｉｌｅ发送短信
         # expires = constants.SMS_CODE_REDIS_EXPIRES // 60
