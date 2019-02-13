@@ -3,3 +3,6 @@ SMS_CODE_REDIS_EXPIRES = 300
 
 # 短信发送模板ID
 SEND_SMS_TEMP_ID = 1
+
+# 短信发送最短间隔时间
+SEND_SMS_CODE_INTERVAL = 60

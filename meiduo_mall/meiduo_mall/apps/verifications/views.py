@@ -24,20 +24,28 @@ class SMSCodeView(APIView):
          3．使用云通讯给ｍｏｂｉｌｅ发送短信
         ４．返回应答，短信发送成功
         """
+        # 获取ｒｅｄｉｓ存储链接
+        redis_conn = get_redis_connection('verify_codes')
+
+        # 判断ｍｏｂｉｌｅ是否在６０秒内发送过短信
+        if redis_conn.get('send_flag_%s' % mobile):
+            return Response({'message':'短信发送过于频繁'}, status=status.HTTP_403_FORBIDDEN)
+
+
         # １．随机生成６位数字作为短信验证码
         sms_code = '%6d' % random.randint(0,999999)
 
 
         #  2．在redis中存储短信验证码内容，以'sms_<mobile>'为key,以验证码内容为ｖａｌｕｅ
 
-        # 获取ｒｅｄｉｓ存储链接
-        redis_conn = get_redis_connection('verify_codes')
+
 
         # 把短信验证码存储到ｒｅｄｉｓ中的方法
         # redis_conn.set('<key>', '<value>', '<expires>')
         # redis_conn.setex('<key>', '<expires>', '<value>')
         redis_conn.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
-
+        # 设置同一手机号最短发送短信标记
+        redis_conn.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, mobile)
 
         #  3．使用云通讯给ｍｏｂｉｌｅ发送短信
         # expires = constants.SMS_CODE_REDIS_EXPIRES // 60
