@@ -51,7 +51,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -131,23 +131,42 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# Django缓存设置(如果不做设置，Django缓存默认是服务器内存)
+# 此处是把Django框架的缓存改为redis
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://10.211.55.5:6379/0",
+        "LOCATION": "redis://127.0.0.1:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
     "session": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://10.211.55.5:6379/1",
+        "LOCATION": "redis://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
-    }
+    },
+    # 存储短信验证码内容
+    "verify_codes": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
 }
+
+# from redis import StrictRedis
+# StrictRedis(host='10.211.55.5', port=6379, db=2)
+
+# from django_redis import get_redis_connection
+# redis_conn = get_redis_connection('verify_codes')
+
+# Django的session存储设置：把session存储缓存中，因为缓存已经设置为了redis
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# session存储到缓存空间的名称
 SESSION_CACHE_ALIAS = "session"
 
 LOGGING = {
