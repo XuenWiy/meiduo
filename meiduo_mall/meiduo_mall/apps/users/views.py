@@ -2,37 +2,37 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView,CreateAPIView
 from users.serializers import UserSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.models import User
-
+from rest_framework.mixins import CreateModelMixin
 
 # 用户注册信息保存
 # POST /users/
-class UserView(GenericAPIView):
+class UserView(CreateAPIView):
     # 指定视图所使用的序列化器类
     serializer_class = UserSerializer
 
-    def post(self,request):
-        """
-        注册用户信息的保存
-        １．获取参数并进行校验(参数完整性,是否同意协议,手机号格式,手机号是该存在,两次密码是否一致,短信验证码是否正确)
-        ２．创建新用户并保存到数据库
-        ３．注册成功，将新用户序列化并返回
-        """
-        # １．获取参数并进行校验(参数完整性, 是否同意协议, 手机号格式, 手机号是该存在, 两次密码是否一致, 短信验证码是否正确)
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-
-        # ２．创建新用户并保存到数据库
-        serializer.save()
-
-
-        # ３．注册成功，将新用户序列化并返回
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # def post(self,request):
+    #     """
+    #     注册用户信息的保存
+    #     １．获取参数并进行校验(参数完整性,是否同意协议,手机号格式,手机号是该存在,两次密码是否一致,短信验证码是否正确)
+    #     ２．创建新用户并保存到数据库
+    #     ３．注册成功，将新用户序列化并返回
+    #     """
+    #     # １．获取参数并进行校验(参数完整性, 是否同意协议, 手机号格式, 手机号是该存在, 两次密码是否一致, 短信验证码是否正确)
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #
+    #
+    #     # ２．创建新用户并保存到数据库
+    #     serializer.save()
+    #
+    #
+    #     # ３．注册成功，将新用户序列化并返回
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 
