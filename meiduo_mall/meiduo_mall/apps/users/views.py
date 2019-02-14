@@ -9,6 +9,23 @@ from rest_framework.views import APIView
 from users.models import User
 from rest_framework.mixins import CreateModelMixin
 
+# 登录功能
+# POST /authorizations/
+# class UserAuthorizeView(APIView):
+#     def post(self,request):
+#         """
+#         用户登录
+#         １．获取参数username和password并进行校验(参数完整性,用户名和密码是否正确)
+#         ２．生成jwt token保存登录用户身份信息
+#         ３．返回响应，登录成功
+#         """
+#         # １．获取参数username和password并进行校验(参数完整性, 用户名和密码是否正确)
+#         # ２．生成jwt token保存登录用户身份信息
+#         # ３．返回响应，登录成功
+#         pass
+
+
+
 # 用户注册信息保存
 # POST /users/
 class UserView(CreateAPIView):
