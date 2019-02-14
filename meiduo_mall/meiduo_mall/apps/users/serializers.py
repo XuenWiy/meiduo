@@ -12,10 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(label='重复密码', write_only=True)
     sms_code = serializers.CharField(label='短信验证码', write_only=True)
     allow = serializers.CharField(label='同意协议', write_only=True)
+    token = serializers.CharField(label="JWT token", read_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'password', 'mobile', 'password2', 'sms_code', 'allow')
+        fields = ('id', 'username', 'password', 'mobile', 'password2', 'sms_code', 'allow', 'token')
 
         extra_kwargs = {
             'username': {
@@ -92,6 +93,22 @@ class UserSerializer(serializers.ModelSerializer):
 
         # 创建新用户并保存到数据库
         user = User.objects.create_user(**validated_data)
+
+        # 由服务器生成一个jwt token,保存用户身份信息
+        from rest_framework_jwt.settings import api_settings
+
+        # 生成payload的方法
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        # 生成jwt token的方法
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+        # 生成payload
+        payload = jwt_payload_handler(user)
+        #生成jwt token
+        token = jwt_encode_handler(payload)
+
+        # 给user对象增加属性token,保存jwt token的数据
+        user.token = token
 
         return user
 

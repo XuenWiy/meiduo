@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
+import datetime
 import os
 import sys
 
@@ -216,6 +216,15 @@ LOGGING = {
 REST_FRAMEWORK = {
     # 异常处理,指定ＤＲＦ框架的异常处理函数
     'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
+
+    # 认证机制设置
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # 引入JWT认证机制,之后如果客户端传递了jwt token给服务器,此认证机制会对jwt token
+        # 进行验证,如果验证失败,会直接返回401(未认证)
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
 }
 
 # 设置Ｄｊａｎｇｏ框架认证系统所使用的模型类
@@ -230,3 +239,10 @@ CORS_ORIGIN_WHITELIST = (
     'www.meiduo.site:8080',
 )
 CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
+
+
+# JWT扩展设置
+JWT_AUTH = {
+    # 设置Jjwt token的有效时间
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+}

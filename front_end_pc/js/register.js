@@ -182,6 +182,15 @@ var vm = new Vue({
                         responseType: 'json'
                     })
                     .then(response => {
+                        // 保存登录用户信息
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        //　保存ｊｗｔ　ｔｏｋｅｎ
+                        localStorage.token = response.data.token;
+                        localStorage.user_id = response.data.id;
+                        localStorage.username = response.data.username;
+
+                        // 跳转到首页
                         location.href = '/index.html';
                     })
                     .catch(error=> {
