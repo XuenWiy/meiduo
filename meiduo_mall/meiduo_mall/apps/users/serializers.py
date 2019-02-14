@@ -39,6 +39,13 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     # 是否同意协议, 手机号格式, 手机号是该存在, 两次密码是否一致, 短信验证码是否正确
+
+    # 用户名不能全部为数字
+    def validate_username(self,value):
+        if re.match('^\d+$',value):
+            raise serializers.ValidationError('用户名不能全部为数字')
+        return value
+
     def validate_allow(self, value):
         # 是否同意协议
         if value != 'true':

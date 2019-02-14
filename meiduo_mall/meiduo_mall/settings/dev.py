@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
+    'oauth.apps.OauthConfig',
 ]
 
 MIDDLEWARE = [
@@ -252,3 +253,10 @@ JWT_AUTH = {
 
 # 指定Django的认证后端类
 AUTHENTICATION_BACKENDS = ['users.utils.UsernameMobileAuthBackend']
+
+
+# QQ登录参数配置
+QQ_CLIENT_ID = '101474184' # 开发者应用appid
+QQ_CLIENT_SECRET = 'c6ce949e04e12ecc909ae6a8b09b637c' # 开发者应用appkey
+QQ_REDIRECT_URI = 'http://www.meiduo.site:8080/oauth_callback.html' # 回调地址
+QQ_STATE = '/' # 登录成功之后要访问页面的地址
