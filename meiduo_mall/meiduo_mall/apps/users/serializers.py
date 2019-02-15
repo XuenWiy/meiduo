@@ -121,4 +121,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 
-
+class UserDetailSerializer(serializers.ModelSerializer):
+    """用户序列化器类"""
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'mobile', 'email', 'email_active')
