@@ -87,6 +87,19 @@ var vm = new Vue({
         // qq登录
         qq_login: function(){
 
+            // 获取ＱＱ登录网址并访问
+            var next = this.get_query_string('next') || '/';
+            axios.get(this.host + '/oauth/qq/authorization/?next=' + next, {
+                    responseType: 'json'
+                })
+                .then(response => {
+                    // 访问ＱＱ登录的网址
+                    location.href = response.data.login_url;
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
+
         }
     }
 });
