@@ -33,11 +33,11 @@ class QQAuthUserSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         # access_token是否有效
-        access_token = attrs.get('access_token')
+        access_token = attrs['access_token']
 
         openid = OAuthQQ.check_save_user_token(access_token)
 
-        if openid in None:
+        if openid is None:
             # 解密失败
             raise serializers.ValidationError('无效的access_token')
 
@@ -64,7 +64,7 @@ class QQAuthUserSerializer(serializers.ModelSerializer):
         # 如果'mobile'已注册，校验对应的密码是否正确
         try:
             user = User.objects.get(mobile=mobile)
-        except User.DoesNOtExist:
+        except User.DoesNotExist:
             # 手机号未注册
             user = None
         else:
