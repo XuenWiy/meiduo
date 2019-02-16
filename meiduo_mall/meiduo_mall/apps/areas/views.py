@@ -8,12 +8,13 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from areas.models import Area
 from areas.serializers import AreaSerializer, SubAreaSerializer
 from rest_framework.mixins import RetrieveModelMixin
+from rest_framework_extensions.cache.mixins import CacheResponseMixin
 
 # Create your views here.
 
 
 # 用视图集实现省市县地区查询
-class AreasViewSet(ReadOnlyModelViewSet):
+class AreasViewSet(CacheResponseMixin, ReadOnlyModelViewSet):
     """地区视图集"""
     def get_serializer_class(self):
         """获取视图所使用的序列化器类"""
