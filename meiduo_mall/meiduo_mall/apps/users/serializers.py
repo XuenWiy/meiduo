@@ -3,6 +3,7 @@ import re
 from django_redis import get_redis_connection
 from rest_framework import serializers
 
+from celery_tasks.email.tasks import send_verify_email
 from users.models import User
 
 
@@ -122,7 +123,43 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
+
     """用户序列化器类"""
     class Meta:
         model = User
         fields = ('id', 'username', 'mobile', 'email', 'email_active')
+
+
+
+class EmailSerializer(serializers.ModelSerializer):
+    """邮箱设置序列化器类"""
+    class Meta:
+        model = User
+        fields = ('id', 'email',)
+
+        extra_kwargs = {
+            'email':{
+                'required':True
+            }
+        }
+
+
+    # 设置登录用户的邮箱并且给邮箱发送验证邮件
+    def update(self, instance, validated_data):
+        # 设置登录用户的邮箱
+        email = validated_data['email']
+        instance.email = email
+        instance.save()
+
+        # TODO给邮箱发送验证邮件
+        # 验证链接：http://www.meiduo.site:8000/success_verify_email.html?user_id=<用户id>
+        # 如果直接将用户的id放在验证链接中,可能会发生恶意请求
+        # 将用户的信息进行加密用 itsdangerous,然后把加密之后的内容放在验证链接中
+        # http://www.meiduo.site:8000/success_verify_email.html?token=<加密用户的信息>
+        # 生成邮箱链接地址
+        verify_url = instance.generate_verify_email_url()
+
+        # 发送邮件
+        send_verify_email.delay(email, verify_url)
+
+        return instance

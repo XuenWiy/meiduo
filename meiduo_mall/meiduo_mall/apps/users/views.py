@@ -3,12 +3,43 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework import status
 from rest_framework.generics import GenericAPIView,CreateAPIView, RetrieveAPIView
-from users.serializers import UserSerializer, UserDetailSerializer
+from users.serializers import UserSerializer, UserDetailSerializer, EmailSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.models import User
 from rest_framework.mixins import CreateModelMixin,RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
+
+
+
+# PUT  /email/
+class EmailView(GenericAPIView):
+    # drf　中权限认证
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = EmailSerializer
+
+    def put(self, request):
+        """
+        登录用户的邮箱设置
+        １．获取参数并进行校验(email必传,email格式)
+        ２．设置登录用户的邮箱并且给邮箱发送验证邮件
+        ３．返回应答，邮箱设置成功
+        """
+        # 获取登录用户
+        user = request.user
+
+        #１．获取参数并进行校验(email必传,email格式)
+        serializer = self.get_serializer(user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # ２．设置登录用户的邮箱
+        serializer.save()
+
+        # ３．返回应答，邮箱设置成功
+        return Response(serializer.data)
+
+
 
 
 
