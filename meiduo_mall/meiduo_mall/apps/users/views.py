@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView,CreateAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
+from users import constants
 from users.serializers import UserSerializer, UserDetailSerializer, EmailSerializer, AddressSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 
 
 
-class AddressViewSet(GenericViewSet):
+class AddressViewSet(CreateModelMixin, GenericViewSet):
     """用户中心地址管理"""
 
     permission_classes = [IsAuthenticated]
@@ -30,15 +31,25 @@ class AddressViewSet(GenericViewSet):
         2.创建并保存新增地址数据
         3.将新增地址数据序列化并返回
         """
-        # 1.获取参数并进行校验(参数完整性,手机号格式,邮箱格式)
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        # 判断用户的地址数量是否超过数量上限
+        count = request.user.addresses.filter(is_deleted=False).count()
 
-        # 2.创建并保存新增地址数据
-        serializer.save()
+        if count >= constants.USER_ADDRESS_COUNTS_LIMIT:
+            return Response({'message':"地址数量超过上限"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 3.将新增地址数据序列化并返回
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # # 1.获取参数并进行校验(参数完整性,手机号格式,邮箱格式)
+        # serializer = self.get_serializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        #
+        # # 2.创建并保存新增地址数据
+        # serializer.save()
+        #
+        # # 3.将新增地址数据序列化并返回
+        # return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+        # 调用CreateModelMixin中create方法
+        return super().create(request)
 
 
 
