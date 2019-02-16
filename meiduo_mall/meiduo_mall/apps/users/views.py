@@ -15,12 +15,15 @@ from rest_framework.permissions import IsAuthenticated
 
 
 
-class AddressViewSet(CreateModelMixin, GenericViewSet):
+class AddressViewSet(CreateModelMixin, GenericViewSet, UpdateModelMixin):
     """用户中心地址管理"""
 
     permission_classes = [IsAuthenticated]
 
     serializer_class = AddressSerializer
+
+    def get_queryset(self):
+        return self.request.user.addresses.filter(is_deleted=False)
 
     # 用户中心地址的添加
     # POST   /addresses/
@@ -52,6 +55,68 @@ class AddressViewSet(CreateModelMixin, GenericViewSet):
         return super().create(request)
 
 
+    # GET  /addresses/
+    def list(self, request):
+        """
+        获取登录用户地址数据
+        1.获取用户所有地址数据
+        2.将地址数据序列化并返回
+        """
+        # 1.获取用户所有地址数据
+        addresses = self.get_queryset()
+
+        # 2.将地址数据序列化并返回
+        serializer = self.get_serializer(addresses, many=True)
+        user = request.user
+        return Response({
+            'user_id': user.id,
+            'default_address_id': user.default_address_id,
+            'limit': constants.USER_ADDRESS_COUNTS_LIMIT,
+            'addresses': serializer.data,
+        })
+
+
+    # DELETE  /addresses/(?P<pk>\d+)/
+    def destroy(self, request, pk):
+        """
+        删除(逻辑删除)登录用户指定地址:
+        1.根据pk获取指定的地址数据
+        2.将地址的is_deleted设置为true
+        3.返回应答
+        """
+        # 1.根据pk获取指定的地址数据
+        address = self.get_object()
+
+        # 2.将地址的is_deleted设置为true
+        address.is_deleted = True
+        address.save()
+
+        # 3.返回应答
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+    #
+    # # PUT /addresses/(?P<pk>\d+)/
+    # def update(self, request, pk):
+    #     """
+    #     修改登录用户指定地址
+    #      1.根据pk获取指定的地址数据
+    #      2.获取参数并进行校验
+    #      3.修改指定地址的数据
+    #      4.返回修改地址序列化数据
+    #     """
+    #     # 1.根据pk获取指定的地址数据
+    #     address = self.get_object()
+    #
+    #     #  2.获取参数并进行校验
+    #     serializer = self.get_serializer(address, data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #
+    #     #  3.修改指定地址的数据
+    #     serializer.save()
+    #
+    #     #  4.返回修改地址序列化数据
+    #     return Response(serializer.data)
 
 
 

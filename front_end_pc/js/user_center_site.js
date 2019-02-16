@@ -40,6 +40,27 @@ var vm = new Vue({
             .catch(error => {
                 alert(error.response.data);
             });
+
+        // 获取登录用户地址数据
+        axios.get(this.host + '/addresses/', {
+                headers: {
+                    'Authorization': 'JWT ' + this.token
+                },
+                responseType: 'json'
+            })
+            .then(response => {
+                this.addresses = response.data.addresses;
+                this.limit = response.data.limit;
+                this.default_address_id = response.data.default_address_id;
+            })
+            .catch(error => {
+                status = error.response.status;
+                if (status == 401 || status == 403) {
+                    location.href = 'login.html?next=/user_center_site.html';
+                } else {
+                    alert(error.response.data.detail);
+                }
+            })
     },
     watch: {
         'form_address.province_id': function(){
@@ -185,6 +206,20 @@ var vm = new Vue({
         },
         // 删除地址
         del_address: function(index){
+
+            axios.delete(this.host + '/addresses/' + this.addresses[index].id + '/', {
+                    headers: {
+                        'Authorization': 'JWT ' + this.token
+                    },
+                    responseType: 'json'
+                })
+                .then(response => {
+                    // 从数组中移除地址
+                    this.addresses.splice(index, 1);
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
 
         },
         // 设置默认地址
