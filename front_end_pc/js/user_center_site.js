@@ -143,6 +143,45 @@ var vm = new Vue({
         // 保存地址
         save_address: function(){
 
+            if (this.error_receiver || this.error_place || this.error_mobile || this.error_email || !this.form_address.province_id || !this.form_address.city_id || !this.form_address.district_id ) {
+                alert('信息填写有误！');
+            } else {
+                this.form_address.title = this.form_address.receiver;
+                if (this.editing_address_index === '') {
+                    // 新增地址
+                    axios.post(this.host + '/addresses/', this.form_address, {
+                        headers: {
+                            'Authorization': 'JWT ' + this.token
+                        },
+                        responseType: 'json'
+                    })
+                    .then(response => {
+                        // 将新地址添加大数组头部
+                        this.addresses.splice(0, 0, response.data);
+                        this.is_show_edit = false;
+                    })
+                    .catch(error => {
+                        console.log(error.response.data);
+                    })
+                } else {
+
+                    // 修改地址
+                    axios.put(this.host + '/addresses/' + this.addresses[this.editing_address_index].id + '/', this.form_address, {
+                        headers: {
+                            'Authorization': 'JWT ' + this.token
+                        },
+                        responseType: 'json'
+                    })
+                    .then(response => {
+                        this.addresses[this.editing_address_index] = response.data;
+                        this.is_show_edit = false;
+                    })
+                    .catch(error => {
+                        alert(error.response.data.detail || error.response.data.message);
+                    })
+                }
+            }
+
         },
         // 删除地址
         del_address: function(index){
