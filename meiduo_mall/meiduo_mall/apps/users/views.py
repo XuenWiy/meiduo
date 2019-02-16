@@ -2,37 +2,46 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import status
-from rest_framework.generics import GenericAPIView,CreateAPIView
+from rest_framework.generics import GenericAPIView,CreateAPIView, RetrieveAPIView
 from users.serializers import UserSerializer, UserDetailSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.models import User
-from rest_framework.mixins import CreateModelMixin
+from rest_framework.mixins import CreateModelMixin,RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 
 
 # 用户中心个人资料显示
 # GET  /user/
-class UserDetailView(GenericAPIView):
+class UserDetailView(RetrieveAPIView):
     # drf　中权限认证
     permission_classes = [IsAuthenticated]
 
     serializer_class = UserDetailSerializer
 
-    def get(self, request):
-        """
-        获取登录用户基本信息
-        1.获取登录用户
-        2.将登录用户对象序列化并返回
-        """
-        # 1.获取登录用户
-        user = request.user
+    def get_object(self):
+        """返回登录用户对象"""
+        # self.request:request请求对象
+        return self.request.user
 
-        # 2.将登录用户对象序列化并返回
-        serializer = self.get_serializer(user)
 
-        return Response(serializer.data)
+    # def get(self, request):
+    #     return self.retrieve(request)
+
+    # def get(self, request):
+    #     """
+    #     获取登录用户基本信息
+    #     1.获取登录用户
+    #     2.将登录用户对象序列化并返回
+    #     """
+    #     # 1.获取登录用户
+    #     user = self.get_object()
+    #
+    #     # 2.将登录用户对象序列化并返回
+    #     serializer = self.get_serializer(user)
+    #
+    #     return Response(serializer.data)
 
 
 
