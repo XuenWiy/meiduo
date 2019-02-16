@@ -2,11 +2,13 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView,CreateAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
 from users import constants
-from users.serializers import UserSerializer, UserDetailSerializer, EmailSerializer, AddressSerializer
+from users.serializers import UserSerializer, UserDetailSerializer, EmailSerializer, AddressSerializer, \
+    AddressTitleSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.models import User
@@ -118,6 +120,53 @@ class AddressViewSet(CreateModelMixin, GenericViewSet, UpdateModelMixin):
     #     #  4.返回修改地址序列化数据
     #     return Response(serializer.data)
 
+
+    # 把某一个收货地址设置为默认地址
+    # PUT /addresses/(?P<pk>\d+)/status/
+    @action(methods=['put'], detail=True)
+    def status(self, request, pk):
+        """
+        设置登录用户默认地址
+        1.根据pk查询指定的地址
+        2.设置登录用户的默认地址
+        3.返回应答,设置成功
+        """
+        # 1.根据pk查询指定的地址
+        address = self.get_object()
+
+        # 2.设置登录用户的默认地址
+        # request.user.default_address = address
+        request.user.default_address_id = address.id
+        request.user.save()
+
+        # 3.返回应答,设置成功
+        return Response({"message":"OK"})
+
+
+    # PUT /addresses/(?P<pk>\d+)/title/
+    @action(methods=['put'], detail=True)
+    def title(self, request, pk):
+        """
+        # 修改指定地址标题
+        1.根据pk查询指定的diz
+        2.获取title参数并校验(title必传)
+        3.修改指定地址的标题并更新数据库
+        4.返回应答,设置标题成功
+        """
+        # 1.根据pk查询指定的diz
+        address = self.get_object()
+
+        # 2.获取title参数并校验(title必传)
+        serializer = AddressTitleSerializer(address, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        title = serializer.validated_data['title']
+
+        # 3.修改指定地址的标题并更新数据库
+        serializer.save()
+
+        # 4.返回应答,设置标题成功
+        return Response(serializer.data)
 
 
 # 邮箱验证

@@ -225,18 +225,53 @@ var vm = new Vue({
         // 设置默认地址
         set_default: function(index){
 
+            axios.put(this.host + '/addresses/' + this.addresses[index].id + '/status/', {}, {
+                    headers: {
+                        'Authorization': 'JWT ' + this.token
+                    },
+                    responseType: 'json'
+                })
+                .then(response => {
+                    this.default_address_id = this.addresses[index].id;
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
+
         },
         // 展示编辑标题
         show_edit_title: function(index){
-
+            this.input_title = this.addresses[index].title;
+            for(var i=0; i<index; i++) {
+                this.is_set_title.push(false);
+            }
+            this.is_set_title.push(true);
         } ,
         // 保存地址标题
         save_title: function(index){
-
+            if (!this.input_title) {
+                alert("请填写标题后再保存！");
+            } else {
+                axios.put(this.host + '/addresses/' + this.addresses[index].id + '/title/', {
+                        title: this.input_title
+                    }, {
+                        headers: {
+                            'Authorization': 'JWT ' + token
+                        },
+                        responseType: 'json'
+                    })
+                    .then(response => {
+                        this.addresses[index].title = this.input_title;
+                        this.is_set_title = [];
+                    })
+                    .catch(error => {
+                        console.log(error.response.data);
+                    })
+            }
         },
         // 取消保存地址
         cancel_title: function(index){
-
+            this.is_set_title = [];
         }
     }
 })

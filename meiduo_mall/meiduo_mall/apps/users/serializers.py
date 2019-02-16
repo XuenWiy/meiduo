@@ -197,3 +197,9 @@ class AddressSerializer(serializers.ModelSerializer):
         addr = super().create(validated_data)
 
         return addr
+
+
+class AddressTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ('id', "title")
