@@ -152,10 +152,10 @@ class EmailSerializer(serializers.ModelSerializer):
         instance.save()
 
         # TODO给邮箱发送验证邮件
-        # 验证链接：http://www.meiduo.site:8000/success_verify_email.html?user_id=<用户id>
+        # 验证链接：http://www.meiduo.site:8080/success_verify_email.html?user_id=<用户id>
         # 如果直接将用户的id放在验证链接中,可能会发生恶意请求
         # 将用户的信息进行加密用 itsdangerous,然后把加密之后的内容放在验证链接中
-        # http://www.meiduo.site:8000/success_verify_email.html?token=<加密用户的信息>
+        # http://www.meiduo.site:8080/success_verify_email.html?token=<加密用户的信息>
         # 生成邮箱链接地址
         verify_url = instance.generate_verify_email_url()
 

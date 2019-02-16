@@ -11,6 +11,36 @@ from rest_framework.mixins import CreateModelMixin,RetrieveModelMixin, UpdateMod
 from rest_framework.permissions import IsAuthenticated
 
 
+# 邮箱验证
+# PUT  /emails/verification/?token=<加密用户的信息>
+class EmailVerifyView(APIView):
+    def put(self, request):
+        """
+        用户邮箱验证
+         1.获取token并进行验证(token必传, token是否有效)
+         2.设置对应用户的邮箱验证标记email_active为True
+         3.返回应答,验证成功
+        """
+        # 1.获取token并进行验证(token必传, token是否有效)
+        token = request.query_params.get('token')
+
+        if token is None:
+            return Response({'message':'缺少token参数'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 对token进行解密
+        user = User.check_email_verify_token(token)
+
+        if user is None:
+            return Response({"message": '无效的ddtoken'}, status=status.HTTP_400_BAD_REQUEST)
+
+        #  2.设置对应用户的邮箱验证标记email_active为True
+        user.email_active = True
+        user.save()
+
+        #  3.返回应答,验证成功
+        return Response({'message':'OK'})
+
+
 
 # PUT  /email/
 class EmailView(UpdateAPIView):
