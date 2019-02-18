@@ -45,6 +45,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
 
+    'ckeditor',  # 富文本编辑器
+    'ckeditor_uploader',  # 富文本编辑器上传图片模块
+
+    'django_crontab',  # 定时任务
+
     'pic.apps.PicConfig',
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
@@ -70,7 +75,7 @@ ROOT_URLCONF = 'meiduo_mall.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -295,3 +300,30 @@ FDFS_NGINX_URL = 'http://image.meiduo.site:8888/'
 
 # 指定Django默认文件存储类
 DEFAULT_FILE_STORAGE = 'meiduo_mall.utils.fastdfs.fdfs_storage.FDFSStorage'
+
+
+
+
+# 富文本编辑器ckeditor配置
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',  # 工具条功能
+        'height': 300,  # 编辑器高度
+        # 'width': 300,  # 编辑器宽
+    },
+}
+CKEDITOR_UPLOAD_PATH = ''  # 上传图片保存路径，使用了FastDFS，所以此处设为''
+
+# 指定生成静态文件的保存目录
+GENERATED_STATIC_HTML_FILES_DIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'front_end_pc')
+
+
+# 定时任务配置
+CRONJOBS = [
+    # 每1分钟执行一次生成主页静态文件
+    ('*/1 * * * *', 'contents.crons.generate_static_index_html', '>>' + os.path.dirname(BASE_DIR) + '/logs/crontab.log')
+]
+
+
+# 解决crontab中文问题
+CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'

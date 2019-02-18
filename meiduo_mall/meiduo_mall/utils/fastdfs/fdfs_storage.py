@@ -1,5 +1,5 @@
 # 自定义文件存储类
-from django.core.files.storage import Storage,FileSystemStorage
+from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from fdfs_client.client import Fdfs_client
 from django.conf import settings
