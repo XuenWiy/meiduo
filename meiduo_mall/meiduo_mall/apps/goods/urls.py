@@ -6,3 +6,9 @@ urlpatterns = [
 
 
 ]
+
+# 路由Router
+from rest_framework.routers import DefaultRouter
+router = DefaultRouter()
+router.register('skus/search', views.SKUSearchViewSet, base_name='skus_search')
+urlpatterns += router.urls

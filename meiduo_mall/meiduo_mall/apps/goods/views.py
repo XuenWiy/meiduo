@@ -3,15 +3,21 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from goods.models import SKU
+from goods.serializers import SKUSerializer, SKUIndexSerializer
+from drf_haystack.viewsets import HaystackViewSet
 # Create your views here.
+
+# GET  /skus/search/?text=<搜索关键字>
+class SKUSearchViewSet(HaystackViewSet):
+    # 指定索引类对应模型类
+    index_models = [SKU]
+
+    # 指定搜索结果序列化是所使用的序列化器类
+    serializer_class = SKUIndexSerializer
 
 
 # GET  /categories/(?P<category_id>\d+)/skus/
-from goods.models import SKU
-from goods.serializers import SKUSerializer
-
-
 class SKUListView(ListAPIView):
 
     serializer_class = SKUSerializer
