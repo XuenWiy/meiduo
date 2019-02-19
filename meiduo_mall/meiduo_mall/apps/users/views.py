@@ -8,12 +8,38 @@ from rest_framework.viewsets import ViewSet, GenericViewSet
 
 from users import constants
 from users.serializers import UserSerializer, UserDetailSerializer, EmailSerializer, AddressSerializer, \
-    AddressTitleSerializer
+    AddressTitleSerializer, BrowseHistorySerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.models import User
 from rest_framework.mixins import CreateModelMixin,RetrieveModelMixin, UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
+
+
+
+# POST  /browse_histories/
+class BrowseHistoryView(GenericAPIView):
+    """历史浏览记录"""
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = BrowseHistorySerializer
+
+    def post(self, request):
+        """
+        # 登录用户浏览记录添加
+         1.获取sku_id并进行校验(sku_id必传,sku_id商品是否存在)
+         2.在redis中存储登录用户浏览的记录
+         3.返回应答,浏览记录添加成功
+        """
+        # 1.获取sku_id并进行校验(sku_id必传,sku_id商品是否存在)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        #  2.在redis中存储登录用户浏览的记录
+        serializer.save()
+
+        #  3.返回应答,浏览记录添加成功
+        return Response(serializer.data)
 
 
 
