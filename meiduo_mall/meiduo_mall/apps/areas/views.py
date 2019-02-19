@@ -16,6 +16,10 @@ from rest_framework_extensions.cache.mixins import CacheResponseMixin
 # 用视图集实现省市县地区查询
 class AreasViewSet(CacheResponseMixin, ReadOnlyModelViewSet):
     """地区视图集"""
+
+    # 关闭分页
+    pagination_class = None
+
     def get_serializer_class(self):
         """获取视图所使用的序列化器类"""
         if self.action == 'list':

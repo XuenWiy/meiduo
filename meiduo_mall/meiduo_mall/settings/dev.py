@@ -244,6 +244,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
+
+    # 全局分页设置
+    'DEFAULT_PAGINATION_CLASS':'meiduo_mall.utils.pagination.StandardResultPagination',
 }
 
 # 设置Ｄｊａｎｇｏ框架认证系统所使用的模型类

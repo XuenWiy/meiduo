@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,6 +20,13 @@ class SKUListView(ListAPIView):
         """返回第三级分类ID分类SKU商品的数据"""
         category_id = self.kwargs['category_id']
         return SKU.objects.filter(category_id=category_id)
+
+
+    # 排序
+    filter_backends = [OrderingFilter]
+    # 指定排序字段
+    ordering_fields = ('create_time', 'price', 'sales')
+
 
     # def get(self, request, category_id):
     #     """
