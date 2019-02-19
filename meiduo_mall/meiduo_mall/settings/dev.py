@@ -50,6 +50,8 @@ INSTALLED_APPS = [
 
     'django_crontab',  # 定时任务
 
+    'haystack',  # 全文检索框架
+
     'pic.apps.PicConfig',
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
@@ -338,3 +340,20 @@ CRONJOBS = [
 
 # 解决crontab中文问题
 CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
+
+
+
+# Haystack 全文检索框架配置
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        # 指定所使用的搜索引擎
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        # 指定es搜索引擎服务器地址
+        'URL': 'http://192.168.37.1:9200/',  # 此处为elasticsearch运行的服务器ip地址，端口号固定为9200
+        # 指定elasticsearch建立的索引库的名称
+        'INDEX_NAME': 'meiduo',  # 指定elasticsearch建立的索引库的名称
+    },
+}
+
+# 当添加、修改、删除数据时，自动生成索引
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
