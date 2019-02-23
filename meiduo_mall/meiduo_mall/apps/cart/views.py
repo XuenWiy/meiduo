@@ -21,6 +21,61 @@ class CartView(APIView):
         """重写父类perform_authentication,让当前视图跳过DRF框架认证过程"""
         pass
 
+    def put(self, request):
+        """
+        购物车记录修改:
+        1.获取参数并进行校验(参数完整性,sku_id商品是否存在,商品的库存)
+        2.修改用户的购物车记录
+            2.1如果用户以登录,修改redis中对应的购物车记录:
+            2.2如果用户未登录,修改cookie中对应的购物车记录
+        3.返回应答,购物车记录修改成功
+        """
+        # 1.获取参数并进行校验(参数完整性,sku_id商品是否存在,商品的库存)
+        serializer = CartSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # 获取校验之后的数据
+        sku_id = serializer.validated_data['sku_id']
+        count = serializer.validated_data['count']
+        selected = serializer.validated_data['selected']
+
+        # 获取user
+        try:
+            # 调用request.user会触发DRF框架认证过程
+            user = request.user
+        except Exception:
+            user = None
+
+
+        # 2.修改用户的购物车记录
+        if user and user.is_authenticated:
+            # 2.1如果用户以登录,修改redis中对应的购物车记录
+            # 获取redis链接
+            redis_conn = get_redis_connection('cart')
+
+            # 修改redis hash中商品id对应数量count
+            cart_key = 'cart_%s' % user.id
+            redis_conn.hset(cart_key, sku_id, count)
+
+            # 修改redis set中勾选的商品id
+            cart_selected_key = 'cart_selected_%s' % user.id
+
+            if selected:
+                # 勾选
+                redis_conn.sadd(cart_selected_key, sku_id)
+            else:
+                # 取消勾选
+                redis_conn.srem(cart_selected_key, sku_id)
+
+            return Response(serializer.validated_data)
+
+        else:
+        # 2.2如果用户未登录,修改cookie中对应的购物车记录
+            pass
+
+        # 3.返回应答,购物车记录修改成功
+
+
     # GET /
     def get(self, request):
         """
@@ -81,7 +136,7 @@ class CartView(APIView):
                 cart_dict = pickle.loads(base64.b64decode(cookie_cart))
             else:
                 cart_dict = {}
-                
+
 
         # 2.根据用户购物车中商品id获取对应商品的数据
         sku_ids = cart_dict.keys()
