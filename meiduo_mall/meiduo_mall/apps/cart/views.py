@@ -71,9 +71,31 @@ class CartView(APIView):
 
         else:
         # 2.2如果用户未登录,修改cookie中对应的购物车记录
-            pass
+            response = Response(serializer.validated_data)
+            # 获取cookie中的购物车数据
+            cookie_cart = request.COOKIES.get('cart')
+            if cookie_cart is None:
+                # 购物车中无数据
+                return response
+            cart_dict = pickle.loads((base64.b64decode(cookie_cart)))
+            if not cart_dict:
+                # 字典为空,购物车无数据
+                return response
 
-        # 3.返回应答,购物车记录修改成功
+            # 修改购物车数据
+            cart_dict[sku_id] = {
+                'count':count,
+                'selected':selected
+            }
+
+            #  3.返回应答,购物车记录修改成功
+            # 设置cookie中购物车数据
+            cart_data = base64.b64encode(pickle.dumps(cart_dict)).decode()
+            response.set_cookie('cart', cart_data, max_age=constants.CART_COOKIE_EXPIRES)
+
+            return response
+
+
 
 
     # GET /
@@ -122,7 +144,7 @@ class CartView(APIView):
             for sku_id,count in cart_redis.items():
                 cart_dict[int(sku_id)] = {
                     'count':int(count),
-                    'selected':sku_id in cart_selected_key
+                    'selected':sku_id in cart_selected_redis
                 }
 
 
