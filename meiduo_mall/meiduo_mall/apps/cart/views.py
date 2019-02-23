@@ -73,8 +73,15 @@ class CartView(APIView):
 
         else:
             #1.2rug用户未登录,从cookie中获取用户的购物车记录
-            pass
+            # 获取cookie中的购物车数据
+            cookie_cart = request.COOKIES.get('cart')
 
+            if cookie_cart:
+                # 解析cookie中购物车数据
+                cart_dict = pickle.loads(base64.b64decode(cookie_cart))
+            else:
+                cart_dict = {}
+                
 
         # 2.根据用户购物车中商品id获取对应商品的数据
         sku_ids = cart_dict.keys()
