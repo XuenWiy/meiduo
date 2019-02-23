@@ -80,10 +80,23 @@ var vm = new Vue({
         },
         on_selected_all: function(){
             var selected = !this.selected_all;
-            for (var i=0; i<this.cart.length;i++){
-                this.cart[i].selected = selected;
-                this.update_count(i, this.cart[i].count);
-            }
+            axios.put(this.host + '/cart/selection/', {
+                    selected
+                }, {
+                    responseType: 'json',
+                    headers:{
+                        'Authorization': 'JWT ' + this.token
+                    },
+                    withCredentials: true
+                })
+                .then(response => {
+                    for (var i=0; i<this.cart.length;i++){
+                        this.cart[i].selected = selected;
+                    }
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
         },
         // 删除购物车数据
         on_delete: function(index){
