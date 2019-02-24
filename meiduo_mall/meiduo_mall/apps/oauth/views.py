@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
+from cart.utils import merge_cookie_cart_to_redis
 from oauth.exceptions import QQAPIError
 from oauth.models import OAuthQQUser
 from oauth.serializers import QQAuthUserSerializer
@@ -32,7 +33,12 @@ class QQAuthUserView(GenericAPIView):
         serializer.save()
 
         # ３．返回应答，绑定成功
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        response = Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        # 调用合并购物车记录函数
+        user = self.user
+        merge_cookie_cart_to_redis(request, user, response)
+        return response
 
 
     # 返回QQ登录后的界面(回调地址或绑定用户地址)
@@ -100,7 +106,11 @@ class QQAuthUserView(GenericAPIView):
                 'token':token
             }
 
-            return Response(res_data)
+            response =  Response(res_data)
+
+            # 调用合并购物车记录函数
+            merge_cookie_cart_to_redis(request, user, response)
+            return response
 
 
 # 访问QQ登录页面
