@@ -2,6 +2,7 @@ from datetime import datetime
 
 from decimal import Decimal
 
+from django.db import transaction
 from django_redis import get_redis_connection
 from rest_framework import serializers
 
@@ -61,22 +62,6 @@ class OrderSerializer(serializers.ModelSerializer):
         else:  #  在线支付
             status = OrderInfo.ORDER_STATUS_ENUM['UNPAID']  # 待支付
 
-
-
-        # 1.向订单基本信息表中添加一条记录
-        order = OrderInfo.objects.create(
-            order_id=order_id,
-            user=user,
-            address=address,
-            total_count=total_count,
-            total_amount=total_amount,
-            freight=freight,
-            pay_method=pay_method,
-            status=status
-        )
-
-
-        # 2.订单中包含几个商品,就需要向订单商品表中添加几条记录
         # 获取redis链接
         redis_conn = get_redis_connection('cart')
 
@@ -89,42 +74,80 @@ class OrderSerializer(serializers.ModelSerializer):
         cart_key = 'cart_%s' % user.id
         cart_redis = redis_conn.hgetall(cart_key)
 
-        for sku_id in sku_ids:
-            # 获取用户所要购买的该商品的数量count
-            count = cart_redis[sku_id]
-            count = int(count)
+        # with语句块下的代码,凡是涉及到数据库操作的代码,在进行数据库操作时,都会放在同一个事务中
+        with transaction.atomic():
 
-            # 根据sku_id获取商品对象
-            sku = SKU.objects.get(id=sku_id)
+            # 设置一个事务的保存点
+            sid = transaction.savepoint()
 
-            # 商品库存判断
-            if count > sku.stock:
-                raise serializers.ValidationError('商品库存不足')
+            try:
 
-            # 减少商品库存,增加销量
-            sku.stock -= count
-            sku.sales += count
-            sku.save()
+                # 1.向订单基本信息表中添加一条记录
+                order = OrderInfo.objects.create(
+                    order_id=order_id,
+                    user=user,
+                    address=address,
+                    total_count=total_count,
+                    total_amount=total_amount,
+                    freight=freight,
+                    pay_method=pay_method,
+                    status=status
+                )
 
-            # 向订单商品表添加一条记录
-            OrderGoods.objects.create(
-                order=order,
-                sku=sku,
-                count=count,
-                price=sku.price
-            )
 
-            # 累加计算订单中商品的总数量和总金额
-            total_count += count
-            total_amount += sku.price*count
+                # 2.订单中包含几个商品,就需要向订单商品表中添加几条记录
 
-        # 实付款
-        total_amount += freight
 
-        # 更新订单商品的总数量和实付款
-        order.total_count = total_count
-        order.total_amount = total_amount
-        order.save()
+                for sku_id in sku_ids:
+                    # 获取用户所要购买的该商品的数量count
+                    count = cart_redis[sku_id]
+                    count = int(count)
+
+                    # 根据sku_id获取商品对象
+                    sku = SKU.objects.get(id=sku_id)
+
+                    # 商品库存判断
+                    if count > sku.stock:
+
+                        # 回滚事务到sid保存点
+                        transaction.savepoint_rollback(sid)
+
+                        raise serializers.ValidationError('商品库存不足')
+
+                    # 减少商品库存,增加销量
+                    sku.stock -= count
+                    sku.sales += count
+                    sku.save()
+
+                    # 向订单商品表添加一条记录
+                    OrderGoods.objects.create(
+                        order=order,
+                        sku=sku,
+                        count=count,
+                        price=sku.price
+                    )
+
+                    # 累加计算订单中商品的总数量和总金额
+                    total_count += count
+                    total_amount += sku.price*count
+
+                # 实付款
+                total_amount += freight
+
+                # 更新订单商品的总数量和实付款
+                order.total_count = total_count
+                order.total_amount = total_amount
+                order.save()
+
+            except serializers.ValidationError:
+                # 继续向外抛出捕获的异常
+                raise 
+
+            except Exception:
+                # 回滚事务到sid保存点
+                transaction.savepoint_rollback(sid)
+
+                raise serializers.ValidationError('下单失败')
 
         # 3.删除redis中对应购物车记录
         pl = redis_conn.pipeline()
