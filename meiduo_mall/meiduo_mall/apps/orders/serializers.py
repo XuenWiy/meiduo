@@ -103,33 +103,60 @@ class OrderSerializer(serializers.ModelSerializer):
                     count = cart_redis[sku_id]
                     count = int(count)
 
-                    # 根据sku_id获取商品对象
-                    sku = SKU.objects.get(id=sku_id)
+                    for i in range(3):
 
-                    # 商品库存判断
-                    if count > sku.stock:
+                        # 根据sku_id获取商品对象
+                        sku = SKU.objects.get(id=sku_id)
 
-                        # 回滚事务到sid保存点
-                        transaction.savepoint_rollback(sid)
+                        # 悲观锁解决方法
+                        # sku = SKU.objects.select_for_update().get(id=sku_id)
 
-                        raise serializers.ValidationError('商品库存不足')
 
-                    # 减少商品库存,增加销量
-                    sku.stock -= count
-                    sku.sales += count
-                    sku.save()
+                        # 商品库存判断
+                        if count > sku.stock:
 
-                    # 向订单商品表添加一条记录
-                    OrderGoods.objects.create(
-                        order=order,
-                        sku=sku,
-                        count=count,
-                        price=sku.price
-                    )
+                            # 回滚事务到sid保存点
+                            transaction.savepoint_rollback(sid)
 
-                    # 累加计算订单中商品的总数量和总金额
-                    total_count += count
-                    total_amount += sku.price*count
+                            raise serializers.ValidationError('商品库存不足')
+
+                        # 记录商品的原始库存
+                        origin_stock = sku.stock
+                        new_stock = origin_stock -count
+                        new_sales = sku.sales + count
+
+
+                        # # 减少商品库存,增加销量
+                        # sku.stock -= count
+                        # sku.sales += count
+                        # sku.save()
+                        # res:更新的条数
+                        res = SKU.objects.filter(id=sku_id, stock=origin_stock).update(stock=new_stock,sales=new_sales)
+
+                        if res == 0:
+                            if i == 2:
+                                # 循环更新了3次,仍然更新失败,直接下单失败
+                                # 回滚事务到sid保存点
+                                transaction.savepoint_rollback(sid)
+                                raise serializers.ValidationError('下单失败2')
+                            # 更新失败,重新进行尝试
+                            continue
+
+
+                        # 向订单商品表添加一条记录
+                        OrderGoods.objects.create(
+                            order=order,
+                            sku=sku,
+                            count=count,
+                            price=sku.price
+                        )
+
+                        # 累加计算订单中商品的总数量和总金额
+                        total_count += count
+                        total_amount += sku.price*count
+
+                        # 更新成功,break跳出循环
+                        break
 
                 # 实付款
                 total_amount += freight
@@ -141,7 +168,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
             except serializers.ValidationError:
                 # 继续向外抛出捕获的异常
-                raise 
+                raise
 
             except Exception:
                 # 回滚事务到sid保存点
