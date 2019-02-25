@@ -3,4 +3,5 @@ from orders import views
 
 urlpatterns = [
     url(r'^orders/settlement/$', views.OrderSettlementView.as_view()),
+    url(r'^orders/$', views.OrderView.as_view()),
 ]
