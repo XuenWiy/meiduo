@@ -87,7 +87,6 @@ var vm = new Vue({
                         responseType: 'json'
                     })
                     .then(response => {
-                        alert('下单成功');
                         location.href = '/order_success.html?order_id='+response.data.order_id
                             +'&amount='+this.payment_amount
                             +'&pay='+this.pay_method;
